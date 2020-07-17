@@ -1,6 +1,7 @@
 const express = require("express");
 const socketIO = require("socket.io");
 const { createServer, Server: HTTPServer } = require("http");
+const path = require("path");
 
 /**
  * @callback ListenCallback
@@ -29,15 +30,21 @@ class Server {
 	 * @readonly
 	 * @type {number}
 	 */
-    DEFAULT_PORT = process.env.APP_DEFAULT_PORT || 8000;
+	DEFAULT_PORT = process.env.APP_DEFAULT_PORT || 8000;
 
 	constructor() {
-        /**
-         * @type {Server}
-         */
+		/**
+		 * @type {Server}
+		 */
 		this.initialize();
 		this.handleRoutes();
-		this.handleSocketConnection();
+	}
+
+	/**
+	 * @private
+	 */
+	configureApp() {
+		this.app.use(express.static(path.join(__dirname, "../public")));
 	}
 
 	/**
@@ -47,6 +54,9 @@ class Server {
 		this.app = express();
 		this.httpServer = createServer(this.app);
 		this.socket = socketIO(this.httpServer);
+
+		this.configureApp();
+		this.handleSocketConnection();
 	}
 
 	/**
@@ -58,26 +68,26 @@ class Server {
 		});
 	}
 
-    /**
+	/**
 	 * @private
 	 */
 	handleSocketConnection() {
 		this.socket.on("connection", () => {
-            console.log("Socket connected!");
-        });
+			console.log("Socket connected!");
+		});
 	}
-    
+
 	/**
 	 * @public
-     * @param {ListenCallback} cb - Called when app starts listening on app's defined port number
+	 * @param {ListenCallback} cb - Called when app starts listening on app's defined port number
 	 */
 	listen(cb) {
-        this.httpServer.listen(this.DEFAULT_PORT, () => {
-            cb(this.DEFAULT_PORT);
-        })
-    }
+		this.httpServer.listen(this.DEFAULT_PORT, () => {
+			cb(this.DEFAULT_PORT);
+		});
+	}
 }
 
 module.exports = {
-    Server
-}
+	Server
+};
