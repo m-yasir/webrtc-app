@@ -12,6 +12,12 @@ const path = require("path");
 class Server {
 	/**
 	 * @private
+	 * @type {Map<string, string>}
+	 */
+	activeCalls = new Map();
+	
+	/**
+	 * @private
 	 * @type {string[]}
 	 */
 	connectedSockets = [];
@@ -91,17 +97,33 @@ class Server {
 			socket.on("disconnect", (reason) => {
 				console.log("Client disconnected! ID: ", socket.id);
 				console.log("Reason: ", reason);
+				const callee = this.activeCalls.get(socket.id);
+				if (callee === undefined) {
+					return;
+				}
+				socket.to(callee).emit("disconnect-call", {
+					from: socket.id
+				});
 			});
-			
+
 			socket.emit("client-socket-id", {
 				data: {
 					socketId: socket.id
 				}
 			});
-			
-			socket.on("callUser", ({ offer, to }) => {
+
+			socket.on("call-user", ({ offer, to }) => {
 				socket.to(to).emit("call-request", { offer, from: socket.id });
-			})
+				
+				this.activeCalls.set(socket.id, to);
+			});
+
+			socket.on("accept-call", ({ answer, to }) => {
+				socket.to(to).emit("call-accepted", { answer, from: socket.id });
+				
+				/** Set map from receiver to sender so if receiver disconnects, sender gets disconnected as well */
+				this.activeCalls.set(socket.id, to);
+			});
 		});
 	}
 
