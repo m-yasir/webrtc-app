@@ -15,7 +15,7 @@ class Server {
 	 * @type {Map<string, string>}
 	 */
 	activeCalls = new Map();
-	
+
 	/**
 	 * @private
 	 * @type {string[]}
@@ -114,13 +114,15 @@ class Server {
 
 			socket.on("call-user", ({ offer, to }) => {
 				socket.to(to).emit("call-request", { offer, from: socket.id });
-				
+
 				this.activeCalls.set(socket.id, to);
 			});
 
 			socket.on("accept-call", ({ answer, to }) => {
-				socket.to(to).emit("call-accepted", { answer, from: socket.id });
-				
+				socket
+					.to(to)
+					.emit("call-accepted", { answer, from: socket.id });
+
 				/** Set map from receiver to sender so if receiver disconnects, sender gets disconnected as well */
 				this.activeCalls.set(socket.id, to);
 			});

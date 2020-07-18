@@ -27,8 +27,10 @@ async function initLocalVideo() {
 		});
 		const localv = document.getElementById("local-video");
 		localv && (localv.srcObject = stream);
-		/** Set your audio/video stream to be streamed to peer connection(s) */
-		stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+		/** Set your audio/video stream to be streamed to peer connection(s) if peer connection didn't error out :) */
+		if (peerConnection !== undefined) {
+			stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+		}
 	} catch (e) {
 		console.warn(e);
 	}
@@ -156,8 +158,8 @@ socket.on("client-socket-id", ({ data: { socketId } }) => {
  * Init client vars needed for app to function
  */
 function init() {
-	initLocalVideo();
 	initRTCPeerConnection();
+	initLocalVideo();
 	window.CallSocketUser = CallSocketUser;
 }
 
