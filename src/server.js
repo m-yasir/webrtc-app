@@ -87,10 +87,21 @@ class Server {
 			if (!existingSocket) {
 				this.connectedSockets.push(socket.id);
 			}
-			
-			socket.on("disconnect", () => {
+
+			socket.on("disconnect", (reason) => {
 				console.log("Client disconnected! ID: ", socket.id);
+				console.log("Reason: ", reason);
 			});
+			
+			socket.emit("client-socket-id", {
+				data: {
+					socketId: socket.id
+				}
+			});
+			
+			socket.on("callUser", ({ offer, to }) => {
+				socket.to(to).emit("call-request", { offer, from: socket.id });
+			})
 		});
 	}
 
