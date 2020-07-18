@@ -12,6 +12,12 @@ const path = require("path");
 class Server {
 	/**
 	 * @private
+	 * @type {string[]}
+	 */
+	connectedSockets = [];
+
+	/**
+	 * @private
 	 * @type {express.Application}
 	 */
 	app;
@@ -24,7 +30,7 @@ class Server {
 	 * @private
 	 * @type {socketIO.Server}
 	 */
-	socket;
+	io;
 	/**
 	 * @private
 	 * @readonly
@@ -37,7 +43,6 @@ class Server {
 		 * @type {Server}
 		 */
 		this.initialize();
-		this.handleRoutes();
 	}
 
 	/**
@@ -53,9 +58,10 @@ class Server {
 	initialize() {
 		this.app = express();
 		this.httpServer = createServer(this.app);
-		this.socket = socketIO(this.httpServer);
+		this.io = socketIO(this.httpServer);
 
 		this.configureApp();
+		this.handleRoutes();
 		this.handleSocketConnection();
 	}
 
@@ -72,8 +78,19 @@ class Server {
 	 * @private
 	 */
 	handleSocketConnection() {
-		this.socket.on("connection", () => {
-			console.log("Socket connected!");
+		this.io.on("connection", (socket) => {
+			console.log("Client connected! ID: ", socket.id);
+			const existingSocket = this.connectedSockets.find(
+				(existingSocket) => existingSocket === socket.id
+			);
+
+			if (!existingSocket) {
+				this.connectedSockets.push(socket.id);
+			}
+			
+			socket.on("disconnect", () => {
+				console.log("Client disconnected! ID: ", socket.id);
+			});
 		});
 	}
 
