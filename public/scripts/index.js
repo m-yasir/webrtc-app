@@ -53,7 +53,7 @@ function initRTCPeerConnection() {
 	try {
 		peerConnection = getNewRTCPeerConnection();
 		/** Set stream to #remote-video video element */
-		peerConnection.ontrack(({ streams: [stream] }) => {
+		peerConnection.ontrack = (({ streams: [stream] }) => {
 			const videoElement = document.getElementById("remote-video");
 			videoElement && (videoElement.srcObject = stream);
 		});
@@ -93,12 +93,15 @@ const CallSocketUser = async (socketId) => {
 /** 
  * @description Listens for "call-request" event emit from server (expected: when other socket connected to server makes a call to this client)
  */
-socket.on("call-request", ({ offer, from: socketId }) => {
+socket.on("call-request", async ({ offer, from: socketId }) => {
 	console.log("Call from socketId: ", socketId);
 	if (peerConnection === undefined) {
 		window.alert(
 			"Unable to establish connection to other socket due to RTCPeerConnection being undefined. Please contact an administrator!"
 		);
+		return;
+	}
+	if (callsInProgress.get(socketId)) {
 		return;
 	}
 	await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
@@ -107,7 +110,7 @@ socket.on("call-request", ({ offer, from: socketId }) => {
 		offerToReceiveAudio: true
 	});
 	await peerConnection.setLocalDescription(new RTCSessionDescription(answer));
-
+	callsInProgress.set(socketId);
 	socket.emit("accept-call", {
 		answer,
 		to: socketId
@@ -118,21 +121,20 @@ socket.on("call-request", ({ offer, from: socketId }) => {
  * @description Listener to Accept Call and establish RTC connection
  */
 socket.on("call-accepted", ({ answer, from: socketId }) => {
-	console.log("Call Accepted from: ", socketId);
 	if (peerConnection === undefined) {
 		window.alert(
 			"Unable to establish connection to other socket due to RTCPeerConnection being undefined. Please contact an administrator!"
 		);
 		return;
 	}
-	/** set status of the peer connection to remote's answer */
-	peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-
 	/** Call the client only once */
 	if (!callsInProgress.get(socketId)) {
 		callsInProgress.set(socketId, true);
 		CallSocketUser(socketId);
 	}
+	console.log("Call Accepted from: ", socketId);
+	/** set status of the peer connection to remote's answer */
+	peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
 });
 
 /**
