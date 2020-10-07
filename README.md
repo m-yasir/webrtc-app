@@ -1,2 +1,2 @@
 # WebRTC App
-A demo app made to try WebRTC
+A demo Nodejs app made to try WebRTC
