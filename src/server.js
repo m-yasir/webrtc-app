@@ -45,36 +45,33 @@ class Server {
 	DEFAULT_PORT = process.env.APP_DEFAULT_PORT || 8000;
 
 	constructor() {
-		/**
-		 * @type {Server}
-		 */
-		this.initialize();
+		this.#initialize();
 	}
 
 	/**
 	 * @private
 	 */
-	configureApp() {
+	#configureApp() {
 		this.app.use(express.static(path.join(__dirname, "../public")));
 	}
 
 	/**
 	 * @private
 	 */
-	initialize() {
+	#initialize() {
 		this.app = express();
 		this.httpServer = createServer(this.app);
 		this.io = socketIO(this.httpServer);
 
-		this.configureApp();
-		this.handleRoutes();
-		this.handleSocketConnection();
+		this.#configureApp();
+		this.#handleRoutes();
+		this.#handleSocketConnection();
 	}
 
 	/**
 	 * @private
 	 */
-	handleRoutes() {
+	#handleRoutes() {
 		this.app.get("/", (req, res) => {
 			res.send("<p>Hello to WebRTC Boilerplate! :)</p>");
 		});
@@ -83,7 +80,7 @@ class Server {
 	/**
 	 * @private
 	 */
-	handleSocketConnection() {
+	#handleSocketConnection() {
 		this.io.on("connection", (socket) => {
 			console.log("Client connected! ID: ", socket.id);
 			const existingSocket = this.connectedSockets.find(
