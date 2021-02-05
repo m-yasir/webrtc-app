@@ -24,10 +24,10 @@
   },
   "homepage": "https://github.com/m-yasir/webrtc-app#readme",
   "devDependencies": {
-    "nodemon": "^2.0.4"
+    "nodemon": "^2.0.7"
   },
   "dependencies": {
     "express": "^4.17.1",
-    "socket.io": "^2.3.0"
+    "socket.io": "^3.1.1"
   }
 }
